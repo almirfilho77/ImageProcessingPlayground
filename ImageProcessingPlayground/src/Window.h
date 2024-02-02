@@ -14,8 +14,6 @@ namespace playground {
         static Window* Create(int width, int height, const std::string& title, bool fullscreen = false);
         ~Window();
 
-        void RenderSomething();
-
         int GetWidth() const { return m_width; }
         int GetHeight() const { return m_height; }
         const std::string& GetTitle() const { return m_title; }
@@ -25,7 +23,6 @@ namespace playground {
         bool IsMarkedToClose() const { return m_markedToClose; }
 
     public:
-        float* CreateInfraToRender();
         bool created = false;
         GLuint vertex_buffer, vertex_shader, fragment_shader, program;
         GLint vpos_location, vcol_location;
