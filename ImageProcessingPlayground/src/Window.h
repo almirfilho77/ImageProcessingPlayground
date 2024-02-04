@@ -13,6 +13,7 @@ namespace playground {
     public:
         static Window* Create(int width, int height, const std::string& title, bool fullscreen = false);
         ~Window();
+        static Window* Get() { return s_Instance; }
 
         int GetWidth() const { return m_width; }
         int GetHeight() const { return m_height; }
@@ -22,10 +23,7 @@ namespace playground {
         void MarkToClose() { m_markedToClose = true; }
         bool IsMarkedToClose() const { return m_markedToClose; }
 
-    public:
-        bool created = false;
-        GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-        GLint vpos_location, vcol_location;
+        GLFWwindow* GetNativeWin() const { return m_NativeWin; }
 
     private:
         Window(int width, int height, const std::string& title, bool fullscreen);
