@@ -154,21 +154,25 @@ void CreateTextureShader()
         GLCallVoid(glShaderSource(imageVertexShaderID, 1, &imageVertexShader, NULL));
         GLCallVoid(glCompileShader(imageVertexShaderID));
         int success;
-        glGetShaderiv(solidQuadVertexShaderID, GL_COMPILE_STATUS, &success);
-        ASSERT(success, "Vertex Shader compilation failed!");
+        GLCallVoid(glGetShaderiv(imageVertexShaderID, GL_COMPILE_STATUS, &success));
+        ASSERT(success == GL_TRUE, "Vertex Shader compilation failed!");
 
         imageFragmentShaderID = GLCall(glCreateShader(GL_FRAGMENT_SHADER));
         GLCallVoid(glShaderSource(imageFragmentShaderID, 1, &imageFragmentShader, NULL));
         GLCallVoid(glCompileShader(imageFragmentShaderID));
-        glGetShaderiv(imageFragmentShaderID, GL_COMPILE_STATUS, &success);
-        ASSERT(success, "Fragment Shader compilation failed!");
+        GLCallVoid(glGetShaderiv(imageFragmentShaderID, GL_COMPILE_STATUS, &success));
+        ASSERT(success == GL_TRUE, "Fragment Shader compilation failed!");
 
         imageProgram = GLCall(glCreateProgram());
         GLCallVoid(glAttachShader(imageProgram, imageVertexShaderID));
         GLCallVoid(glAttachShader(imageProgram, imageFragmentShaderID));
         GLCallVoid(glLinkProgram(imageProgram));
-        glGetProgramiv(imageProgram, GL_VALIDATE_STATUS, &success);
-        ASSERT(success, "Shader linkage failed!");
+        GLCallVoid(glGetProgramiv(imageProgram, GL_LINK_STATUS, &success));
+        ASSERT(success == GL_TRUE, "Shader linkage failed!");
+
+        GLCallVoid(glValidateProgram(imageProgram));
+        GLCallVoid(glGetProgramiv(imageProgram, GL_VALIDATE_STATUS, &success));
+        ASSERT(success == GL_TRUE, "Shader validation failed!");
 
         // Unbind shader
         GLCallVoid(glUseProgram(0));
