@@ -4,6 +4,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+#include <windows.h>
 //#include <GLFW/glfw3.h>
 
 #include "Window.h"
@@ -331,7 +333,6 @@ void UploadTexture(unsigned char *imageData, int channels, int width, int height
 
 void RenderImage(const cv::Mat& image)
 {
-    CreateImageCanvas();
     cv::Mat flippedImage;
     cv::flip(image, flippedImage, 0);
     cv::cvtColor(flippedImage, flippedImage, cv::COLOR_BGR2RGB);
@@ -362,23 +363,46 @@ int main(int argc, char** argv)
 {
     playground::Window* win = playground::Window::Create(WIN_WIDTH, WIN_HEIGHT, WIN_TITLE, false);
 
-    cv::Mat image;
-    image = cv::imread("football.png", cv::IMREAD_COLOR); // Read the file
-    if (image.empty()) // Check for invalid input
+    //cv::Mat image;
+    //image = cv::imread("football.png", cv::IMREAD_COLOR); // Read the file
+    //if (image.empty()) // Check for invalid input
+    //{
+    //    std::cout << "Could not open or find the image" << std::endl;
+    //    return -1;
+    //}
+
+#ifdef WIN32
+    _putenv_s("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp");
+#else
+    setenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", 1);
+#endif
+    int frameNum = -1;
+    const std::string streamSource = "rtsp://admin:loco6005@192.168.1.76:554/onvif1";
+    cv::VideoCapture ipCamStream(streamSource, cv::CAP_FFMPEG);
+    if (!ipCamStream.isOpened())
     {
-        std::cout << "Could not open or find the image" << std::endl;
+        std::cerr << "!! Could not open the video stream [" << streamSource << "]\n";
         return -1;
     }
+    cv::Size videoFrameSize = cv::Size((int)ipCamStream.get(cv::CAP_PROP_FRAME_WIDTH), (int)ipCamStream.get(cv::CAP_PROP_FRAME_HEIGHT));
+    std::cout << "Frame width [" << videoFrameSize.width << "] / height [" << videoFrameSize.height << "]\n";
 
-    /*
-    * cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE); // Create a window for display.
-    * cv::imshow("Display window", image); // Show our image inside it.
-    * cv::waitKey(0); // Wait for a keystroke in the window
-    */
+    CreateImageCanvas();
+
+    cv::Mat currentFrame;
 
     while (!win->IsMarkedToClose())
     {
-        RenderImage(image);
+        ipCamStream >> currentFrame;
+        if (currentFrame.empty())
+        {
+            std::cout << "End of stream!\n";
+            break;
+        }
+        textureUploaded = false;
+        ++frameNum;
+        std::cout << "Execute RenderImage on frame [" << frameNum << "]\n";
+        RenderImage(currentFrame);
         //RenderSolidColorQuad();
     }
     ASSERT(win != 0, "Window is null");
